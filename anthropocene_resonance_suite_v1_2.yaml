@@ -1,0 +1,70 @@
+anthropocene_resonance_suite_v1_2:
+  claim: "IR/UV-sensitive mixtures + AHF + transport create pre-resonant air volumes that raise RI odds; microplastics (MP) act as a variance modulator via radiative, microphysical, and electrical pathways."
+  
+  diagnostics:
+    PCI: "(I_UV_peak/1000)*kappa*eta_eff*(f_metal/1ppm)*A_factor(RH,CCN,AOD_IR)"
+    PCI_star: "PCI*(1 + PLF_total)"
+    fingerprint: "IR heating band 850–600 hPa, 6–18 h pre-RI"
+    
+  micro_pv_energy_model:
+    formula: "E_12h = I_UV_peak*0.08*kappa*eta*f_metal*(12h)*A*QEF*SWF*FAF"
+    
+  microplastics_module:
+    description: "Plastic Load Factor (PLF) modulates PCI and adjusts shortwave heating via absorbing vs. scattering MP modes; IN_MP adds a regime-dependent mixed-phase term."
+    PLF:
+      definition: "PLF_total = alpha*AOD_MP_abs + beta*AOD_MP_sca + gamma(T,RH,LWC)*Phi_IN_MP(T)"
+      usage: "PCI_star = PCI * (1 + clamp(PLF_total, -0.8, 1.5))"
+      components:
+        AOD_MP_abs:   {role: "heating(+)",  proxy: "residual AOD + tire/CB proxies (traffic/ship lanes, BC:OC, NOx)"} 
+        AOD_MP_sca:   {role: "cooling(-)",  proxy: "residual non-absorbing AOD"}
+        Phi_IN_MP:    {role: "mixed-phase activity", activation: "T in [-38,0] °C", note: "from lab calibration (T9)"}
+      weights:
+        alpha: 1.0   # placeholder; calibrate in T9
+        beta: -0.4   # placeholder; calibrate in T9
+      gamma_function:
+        name: "gamma(T,RH,LWC)"
+        regime: "positive in moist, LWC-rich mixed-phase; negative when dry/water-limited"
+        default_params:
+          gamma_max: 0.8
+          gamma_min: 0.5
+          RH_mid: 0.75
+          RH_width: 0.15
+          LWC_mid_gm3: 0.10
+          LWC_width_gm3: 0.30
+        formula_sketch: |
+          # Inputs: T_C (°C), RH (0..1), LWC (g/m^3)
+          # Mixed-phase gating
+          theta_T = clamp((0 - T_C)/38, 0, 1)
+          # Moisture scalings
+          theta_RH  = clamp((RH - RH_mid)/RH_width, 0, 1)
+          theta_LWC = clamp((LWC - LWC_mid_gm3)/LWC_width_gm3, 0, 1)
+          gamma_pos = gamma_max * (0.6*theta_RH + 0.4*theta_LWC) * theta_T
+          gamma_neg = gamma_min * (1 - theta_RH) * (1 - theta_LWC) * theta_T
+          gamma(T,RH,LWC) = gamma_pos - gamma_neg
+          
+    radiation_adjustment:
+      note: "Avoid double counting; cap total shortwave column heating adjustment at ≤5% of baseline SW heating."
+      Qdot_PV_MP: "Qdot_PV * max(0.0, 1 + alpha*AOD_MP_abs + beta*AOD_MP_sca)"
+      
+  wrf_patch:
+    modules:
+      - name: add_shortwave_heating_tendency
+        operation: "Qdot_PV(z) = (0.08*I_UV_peak*kappa)*eta_eff*f_metal(z)*QEF*SWF*FAF*weight_layer(z); Qdot_PV_MP(z) = Qdot_PV(z) * max(0, 1 + alpha*AOD_MP_abs(z) + beta*AOD_MP_sca(z)); theta_tend += Qdot_PV_MP/(rho*cp)"
+      - name: microphysics_driver
+        operation: "qc_crit' = qc_crit*(1 + lambda*PCI_star); add IN_MP term for mixed-phase freezing using gamma(T,RH,LWC) calibrated in T9"
+      - name: electrification_diag
+        operation: "Eloc += E_tribo_MP(RH, U, size); if Eloc*PCI_star > E_threshold then flag_microdischarge = true"
+        
+  tests:
+    - T1_skill: "Baseline vs +{PCI, AOD_IR, BC/OC, CO/HCHO, AHF} (ΔAUC, ΔBrier, reliability)"
+    - T2_fingerprint: "IR heating band 850–600 hPa, 6–18 h pre-RI"
+    - T3_diurnal: "Night × (AOD_IR↑ & OLR↓) OR > 1.3 with cluster-robust SE"
+    - T4_erc_reintens: "Cox HR > 1 with persistent AOD_IR (50–150 km ring)"
+    - T5_negative_control: "BC/VOC > clean > SAL ordering"
+    - T6_coupled_runs: "base→+optics→+rad→+micro→+AHF monotone ΔCAPE/Updraft/Vmax surrogate"
+    - T7_plf_skill: "Baseline+PCI vs Baseline+PCI_star with low/mid/high AOD_MP scenarios; ΔAUC ≥ 0.02 expected"
+    - T8_mixed_phase_fp: "Earlier glaciation vs Phi_IN_MP peaks (Lag 3–9 h)"
+    - T9_lab_field_cal: "Lab: derive gamma(T,RH,LWC) & optical α,β; Field: validate along MP-proxy transects"
+    
+  ops_rules:
+    - "RI-Window (12–24 h) active if: PCI_star ≥ Q90 in inflow AND IR heating band 850–600 hPa AND OLR minimum; prioritize nocturnal window."

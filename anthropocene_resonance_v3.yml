@@ -1,0 +1,36 @@
+anthropocene_resonance_v3:
+  claim: >
+    IR-aktive Moleküle + AHF + Ferntransport erzeugen punktuelle
+    Resonanzräume, die Rapid Intensification (RI) begünstigen.
+  anchors:
+    erin_2025:
+      facts:
+        - "Cat-5 in ~25 h; early-season record"
+      cites:
+        - turn0search2
+        - turn0news46
+  mechanisms:
+    radiative_IR: ["BC absorption enhancement", "low OLR pockets"]
+    microphysics: ["warm-rain delay", "latent-heat aloft (invigoration)"]
+    dynamics_transport: ["jetstream clustering", "SAL as negative control"]
+    anthropogenic_heat_flux:
+      global_mean_Wm2: "0.03..0.05"
+      urban_peaks_Wm2: ">=100 (up to ~1e3)"
+  trigger_definition:
+    inflow_layer_hPa: [925, 700]
+    radius_km: [100, 300]
+    lead_time_h: [6, 18]
+  falsifiable_predictions:
+    - "RI probability increases with IR-sensitive AOD in inflow at fixed SST/shear"
+    - "nocturnal RI enhanced when (AOD_IR↑ & OLR↓)"
+  desert_cracker_v1_1:
+    lab_basis:
+      microlightning: "water microdroplets: discharges & gas activation without external HV"
+      spontaneous_voltage: "YBCO/NCSMO: 10–80 mV, persistent current"
+    unit_cell:
+      droplet_um: [1, 50]
+      carrier_media: ["BC-loaded zeolite", "metal oxides"]
+      bias_stack: "thin-film YBCO/NCSMO (series)"
+    mvp_targets:
+      co2_uptake_g_m2_day: ">=1"
+      net_energy: "near-zero (fans/pumps only)"
