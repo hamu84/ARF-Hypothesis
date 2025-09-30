@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: "The Anthropocene Resonance Framework (ARF): Hypothesis & Design (v1.6)"
+authors:
+  - family-names: Mund
+    given-names: Hans
+date-released: 2025-09-30
+version: v1.6
+doi: 10.5281/zenodo.XXXXXXX
+license: CC-BY-4.0
+type: article
