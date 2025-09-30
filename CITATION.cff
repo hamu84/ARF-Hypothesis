@@ -1,10 +1,16 @@
 cff-version: 1.2.0
-title: "The Anthropocene Resonance Framework (ARF): Hypothesis & Design (v1.6)"
+message: "If you use this software, please cite it as below."
+title: "Anthropocene Resonance Framework (ARF): Hypothesis & Design"
 authors:
-  - family-names: Mund
-    given-names: Hans
+  - family-names: "Mund"
+    given-names: "Hans"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
 date-released: 2025-09-30
-version: v1.6
-doi: 10.5281/zenodo.XXXXXXX
-license: CC-BY-4.0
-type: article
+version: "v1.6"
+doi: "10.5281/zenodo.17235213"
+license: "MIT"
+repository-code: "https://github.com/<your-username>/ARF-Hypothesis"
+abstract: >
+  The Anthropocene Resonance Framework (ARF) is a preregistered open-science
+  study that explores resonance-driven climate instabilities. It includes
+  hypotheses, design documents, and reproducible hooks for model integration.
